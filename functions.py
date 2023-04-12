@@ -4,7 +4,7 @@ import math  as mt
 import random as rd
 from IPython.display import display,HTML,clear_output
 from sqlalchemy import create_engine
-
+#ZIO CANE
 engine = create_engine("postgresql+psycopg2://matteo:Ettore2021@localhost:5432/imdb_py")
 
 def firstQuestion(n=0, d=2) :
