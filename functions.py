@@ -4,8 +4,22 @@ import math  as mt
 import random as rd
 from IPython.display import display,HTML,clear_output
 from sqlalchemy import create_engine
-#ZIO CANE
+
 engine = create_engine("postgresql+psycopg2://matteo:Ettore2021@localhost:5432/imdb_py")
+
+
+#TO DO: 
+#- finire sgrassare codice
+#- i#mplementare versione facile delle restanti tipologie di domande
+#- implementare ponderazione punteggio in relazione alla difficolta'
+#- POSSO UTILIZZARE LA list comprehension DA QUALCHE PARTE?
+
+possibleQuestions = [
+    "In quale tra i seguenti film ha recitato {}?",
+    "In che anno è stato pubblicato il film \"{}\"?",
+    "Qual è il paese di produzione del film \"{}\"?",
+    "Quale dei seguenti attori ha recitato nel film \"{}\"?"
+    ]
 
 def firstQuestion(n=0, d=2) :
        #ATTENZIONE È POSSIBILE CHE ESCA PIù VOLTE LO STESSO FILM PROBABILMENTE PERCHè CI SONO RECORD CON STESSO OFFICIAL TITLE MA ATTORE DIVERSO
@@ -50,10 +64,10 @@ def firstQuestion(n=0, d=2) :
         table += "</td></tr>" 
     #quesito
     answerIndex = rd.randint(0,3) #IMPLEMENTARE QUESTA STRATEGIA ANCHE PER ALTRI
-    question = possibleQuest[0].format(actors[answerIndex])
+    question = possibleQuestions[0].format(actors[answerIndex])
     content = '<tr><th style="color:red; text-align:center">Quiz n°'+ str(n) +'</th></tr><tr><td style="text-align:left">' + question + '</td></tr>'
     content += table
-    return content, answerIndex #roba
+    return content, answerIndex 
 
 def secondQuestion(n=0, d=2):
     table = ""
@@ -78,7 +92,7 @@ def secondQuestion(n=0, d=2):
     title = movie['official_title']
     year = movie['year']
     possibilities = np.random.normal(int(year), 6, 2)
-    superWrong = np.random.normal(int(year), 30,1)[0]
+    superWrong = np.random.uniform(int(year), 20,1)[0] #prendo il primo elemento dell'array che mi restituisce
     possibilities = np.append(possibilities, superWrong)
     possibilities = np.append(possibilities, year)
     np.random.shuffle(possibilities) #mischio gli elementi dell'array per randomizzare disposizione opzioni
@@ -94,12 +108,12 @@ def secondQuestion(n=0, d=2):
         table += "<tr><td style='text-align:left'>"    
         table += str(i+1) + ") " + str(a)
         table += "</td></tr>" 
-    question = possibleQuest[1].format(title)
+    question = possibleQuestions[1].format(title)
     content = '<tr><th style="color:red; text-align:center">Quiz n°'+ str(n) +'</th></tr><tr><td style="text-align:left">' + question + '</td></tr>'
     content += table 
     return content, answerIndex
 
-def thirdQuestion(n=0) : 
+def thirdQuestion(n=0, d=2) : 
     answerIndex = None
     table = ""
     sql = """
@@ -135,13 +149,12 @@ def thirdQuestion(n=0) :
         table += "<tr><td style='text-align:left'>" 
         table += str(j+1) + ") " + str(coList[j])
         table += "</td></tr>" 
-    question = possibleQuest[2].format(title)
+    question = possibleQuestions[2].format(title)
     content = '<tr><th style="color:red; text-align:center">Quiz n°'+ str(n) +'</th></tr><tr><td style="text-align:left">' + question + '</td></tr>'
     content += table
     return content, answerIndex
 
-
-def fourthQuestion(n=0): #"Quale tra i seguenti attori ha recitato nel film \"{}\"?"
+def fourthQuestion(n=0, d=2): #"Quale tra i seguenti attori ha recitato nel film \"{}\"?"
     #VERIFICARE CHE VENGANO RIMOSSI CORRETTAMENTE I FILM DOVE HA RECITATO L'ATTORE
     answerIndex = None
     table = ""
@@ -176,42 +189,32 @@ def fourthQuestion(n=0): #"Quale tra i seguenti attori ha recitato nel film \"{}
         table += "<tr><td style='text-align:left'>" 
         table += str(j+1) + ") " + str(actors[j])
         table += "</td></tr>" 
-    question = possibleQuest[3].format(title)
+    question = possibleQuestions[3].format(title)
     content = '<tr><th style="color:red; text-align:center">Quiz n°'+ str(n) +'</th></tr><tr><td style="text-align:left">' + question + '</td></tr>'
     content += table
     return content, answerIndex
 
-## DA SISTEMARE DISCORSO CHE DEVO ELIMINARE TUTTI I FILM DOVE C'è QUELL'ATTORE PER EVITARE PIù DI UNA POSSIBILE RISP CORRETTA
-#POSSO UTILIZZARE LA list comprehension DA QUALCHE PARTE?
-possibleQuest = [
-    "In quale tra i seguenti film ha recitato {}?",
-    "In che anno è stato pubblicato il film \"{}\"?",
-    "Qual è il paese di produzione del film \"{}\"?",
-    "Quale dei seguenti attori ha recitato nel film \"{}\"?"
-    ]
-
-def generateQuiz():
-    display(HTML('<tr><th text-align:center">Selezionare il numero di quesiti che si desidera ricevere.</th></tr>'))
-    while True:
-            try:
-               n = int(input("Indicare un numero maggiore di 0\n"))
-            except ValueError:
-                print("Input non valido, inserire un numero intero.")
-                continue
-            if n <= 0:
-                print("Inserire un numero maggiore di 0")
-                continue
-            break
-    #SISTEMARE HTML, ORA NON HA SENSO RESTITUIRLO ALLA FINE E CREARE LA TABELLA ALL'INIZIO ED ALLA FINE
+def generateQuiz(n=None):
+    if n == None:
+        display(HTML('<tr><th text-align:center">Inserire il numero di quesiti che si desidera ricevere.</th></tr>'))
+        while True:
+                try:
+                    n = int(input("Indicare un numero maggiore di 0\n"))
+                except ValueError:
+                    print("Input non valido, inserire un numero intero.")
+                    continue
+                if n <= 0:
+                    print("Inserire un numero maggiore di 0")
+                    continue
+                break
     result = [] 
     inputs = []
     html = ""
-    correctAns = []
     risp = ""
     cor = ""
     points = 0
     for i in range(n):
-        display(HTML('<tr><th text-align:center">Selezionale la difficoltà del prossimo quesito.</th></tr><tr><td>1)Facile</td><td>2)Normale</td></td></tr>'))
+        display(HTML('<tr><th text-align:center">Inserire la difficoltà del prossimo quesito.</th></tr><tr><td>1)Facile</td><td>2)Normale</td></td></tr>'))
         while True:
             try:
                diff = int(input("Indicare il numero corrispondente alla difficoltà desiderata\n"))
@@ -222,8 +225,8 @@ def generateQuiz():
                 print("Inserire un numero compreso tra 1 e 2.")
                 continue
             break
-        j = rd.randint(0, len(possibleQuest) - 1) 
-        #j=1
+        j = rd.randint(0, len(possibleQuestions) - 1) 
+        j=1
         quizNum = i + 1
         if j == 0:
             result.append(firstQuestion(quizNum, diff))
@@ -238,21 +241,17 @@ def generateQuiz():
             try:
                a = int(input("Indicare il numero della risposta desiderata relativamente al quiz n°" + str(quizNum) +"\n"))
             except ValueError:
-                print("Input non valido, inserire un numero compreso tra 1 e 4.")
+                print("Input non valido, inserire un numero intero compreso tra 1 e 4.")
                 continue
             if a > 4 or a < 1:
                 print("Inserire un numero compreso tra 1 e 4.")
                 continue
             break
         inputs.append(a)
-        correctAns.append(result[i][1]+1) 
         html += result[i][0] 
         points = points + 1 if int(result[i][1]+1)==inputs[i] else points + 0
         risp += str(inputs[i]) + " "
-        cor += str(result[i][1]+1) + " "
-    print("Punteggio: " + str(points) +"/"+ str(n))
+        cor += str(result[i][1]+1) + " " 
     print("Risposte date: " + risp)
     print("Risposte corrette: " + cor)
-    
-    print(correctAns)
-    return # html, correctAns
+    print("Punteggio: " + str(points) +"/"+ str(n))
