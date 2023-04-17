@@ -44,7 +44,8 @@ def firstQuestion(n=0, d=2) : #In quale tra i seguenti film ha recitato {}?"
     for i in range(4):
         allIndex = resultMovies.index #prendo gli indici dal dataframe
         index = rd.choice(allIndex) #scelgo un indice random
-        row = resultMovies.loc[index] #scelgo riga in relazione indice indivituato riga prec. PS: con iloc schioppa tutto se index >1000
+        row = resultMovies.loc[index] #scelgo riga in relazione indice indivituato riga prec. 
+        #non ho utilizzato iloc, tipicamene utilizzato per gli indici poichè dava errore con indici maggiori di 1000
         #rimuovo eventuali altri record con lo stesso official_title
         resultMovies = resultMovies[(resultMovies['official_title'] != row['official_title'])] 
         actor = row['given_name']
@@ -54,7 +55,7 @@ def firstQuestion(n=0, d=2) : #In quale tra i seguenti film ha recitato {}?"
         table += str(i+1) + ") " + str(row['official_title'])
         table += "</td></tr>" 
     #quesito
-    answerIndex = rd.randint(0,3) #IMPLEMENTARE QUESTA STRATEGIA ANCHE PER ALTRI
+    answerIndex = rd.randint(0,3)
     question = possibleQuestions[0].format(actors[answerIndex])
     content = '<tr><th style="color:red; text-align:center">Quiz n°'+ str(n) +'</th></tr><tr><th style="text-align:left">' + question + '</th></tr>'
     content += table
@@ -84,7 +85,6 @@ def secondQuestion(n=0, d=2): #"In che anno è stato pubblicato il film \"{}\"?"
     possibilities = np.random.normal(int(year), 6, 2) #genero 2  opzioni del quiz che non si discostano troppo dall'opzione corretta
     superWrong = np.random.normal(int(year), 40,1)[0] #genero opzione mediamente più distante dal valore corretto
     possibilities = np.append(possibilities, [superWrong, year])
-    #possibilities = np.append(possibilities, )
     np.random.shuffle(possibilities) #mischio gli elementi dell'array per randomizzare disposizione delle opzioni
     #controllo che non vi siano elemtenti dell'array uguali
     for i  in range(len(possibilities)):
@@ -124,7 +124,7 @@ def thirdQuestion(n=0, d=2) : #"In quale paese o gruppo di paesi è stato girato
     resultMovies = pd.read_sql(sql, engine)
     allIndex = resultMovies.index #prendo gli indici dal dataframe
     index = rd.choice(allIndex) #scelgo un indice random
-    row = resultMovies.loc[index] #scelgo riga in relazione indice indivituato riga prec. PS: con iloc schioppa tutto se index >1000 togliere
+    row = resultMovies.loc[index] #scelgo riga in relazione indice indivituato riga prec.
     #raggruppo in un data frame le righe con lo stesso film per vedere se ci sono diversi paesi
     rowsWithSameFilm = resultMovies[(resultMovies['official_title'] == row['official_title'])]
     countries = ""
@@ -273,7 +273,9 @@ def generateQuiz(n=4):
             break
         inputs.append(a)
         html += result[i][0] 
+        #calcolo punti
         points = points + molt if int(result[i][1]+1)==inputs[i] else points + 0
+        #mostro le risposte date e quelle corrette per consentire il confronto
         date += str(inputs[i]) + " "
         corrette += str(result[i][1]+1) + " " 
     print("Risposte date: " + date)
